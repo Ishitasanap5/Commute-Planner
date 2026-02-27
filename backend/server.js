@@ -1,34 +1,23 @@
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
+import cors from "cors";
 import connectDB from "./config/db.js";
-import rateLimit from "express-rate-limit";
+import userRoutes from "./routes/userRoutes.js";
+import routeRoutes from "./routes/routeRoutes.js";
+import alertRoutes from "./routes/alertRoutes.js";
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
-// CORS
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
-
-// Rate Limiter
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 mins
-  max: 100,
-  message: "Too many requests from this IP, try again later."
-});
-app.use(limiter);
-
-// Body parser
+app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => res.send("Backend running!"));
+app.use("/api/users", userRoutes);
+app.use("/api/routes", routeRoutes);
+app.use("/api/alerts", alertRoutes);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
+});
