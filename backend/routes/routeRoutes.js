@@ -8,18 +8,26 @@ import {
   getRouteAnalytics,
   getCostTrend,
   getModeBreakdown,
-  getMonthlyAnalytics
+  getMonthlyAnalytics,
 } from "../controllers/routeController.js";
+import { validateRoute } from "../middleware/validationMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", protect, createRoute);
+// ================= CREATE ROUTE =================
+router.post("/", protect, validateRoute, createRoute);
+
+// ================= GET ROUTES =================
 router.get("/", protect, getUserRoutes);
+
+// ================= ANALYTICS (Specific Routes First) =================
 router.get("/analytics", protect, getRouteAnalytics);
-router.put("/:id", protect, updateRoute);
-router.delete("/:id", protect, deleteRoute);
 router.get("/analytics/monthly", protect, getMonthlyAnalytics);
 router.get("/analytics/mode-breakdown", protect, getModeBreakdown);
 router.get("/analytics/cost-trend", protect, getCostTrend);
+
+// ================= DYNAMIC ROUTES (LAST) =================
+router.put("/:id", protect, updateRoute);
+router.delete("/:id", protect, deleteRoute);
 
 export default router;

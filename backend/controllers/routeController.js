@@ -88,3 +88,65 @@ export const getRouteAnalytics = asyncHandler(async (req, res) => {
     }
   );
 });
+// Add at the bottom of routeController.js
+export const getCostTrend = asyncHandler(async (req, res) => {
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+  const trend = await Route.aggregate([
+    {
+      $match: {
+        userId: req.user._id,
+        createdAt: { $gte: sixMonthsAgo }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" }
+        },
+        totalCost: { $sum: "$cost" }
+      }
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } }
+  ])
+
+  res.status(200).json(trend)
+})
+export const getModeBreakdown = asyncHandler(async (req, res) => {
+  const breakdown = await Route.aggregate([
+    { $match: { userId: req.user._id } },
+    {
+      $group: {
+        _id: "$mode",            // group by mode: cab, bus, train, walk
+        count: { $sum: 1 },      // number of trips per mode
+        totalCost: { $sum: "$cost" } // total cost per mode
+      }
+    },
+    { $sort: { count: -1 } }    // sort by most used mode
+  ]);
+
+  res.status(200).json(breakdown);
+});
+
+/* ================= GET MONTHLY ANALYTICS ================= */
+export const getMonthlyAnalytics = asyncHandler(async (req, res) => {
+  const analytics = await Route.aggregate([
+    { $match: { userId: req.user._id } },
+    {
+      $group: {
+        _id: {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" }
+        },
+        totalCost: { $sum: "$cost" },
+        totalTime: { $sum: "$time" },
+        totalRoutes: { $sum: 1 }
+      }
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } } // sort by date
+  ]);
+
+  res.status(200).json(analytics);
+});
